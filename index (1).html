@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Koding dan Kecerdasan Artifisial: Misi Robot Cerdas</title>
+<style>
+:root{--bg:#f3f7ff;--ink:#0f172a;--mut:#334155;--pri:#1d4ed8;--pri2:#1e3a8a;--ok:#166534;--okbg:#dcfce7;--bad:#991b1b;--badbg:#fee2e2;--line:#c7d2fe;--hdr:#0f172a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#020617;overflow:hidden;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+#stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;background:var(--bg);color:var(--ink);overflow:hidden}
+.screen{position:absolute;inset:0;display:none;flex-direction:column}
+.screen.active{display:flex}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;min-height:52px;padding:0 22px;font-weight:700;font-size:20px}
+button:focus-visible{outline:4px solid #f59e0b;outline-offset:2px}
+.btn{background:var(--pri);color:#fff}
+.btn:hover{background:var(--pri2)}
+.btn.alt{background:#fff;color:var(--pri2);border:2px solid var(--pri)}
+.btn.alt:hover{background:#eff6ff}
+.btn:disabled{background:#94a3b8;color:#1e293b;cursor:not-allowed;border-color:#94a3b8}
+.btn.sm{min-height:44px;font-size:17px;padding:0 14px}
+h1,h2,h3,p{margin:0}
+.card{background:#fff;border:2px solid var(--line);border-radius:16px;padding:16px 20px;font-size:20px;line-height:1.45}
+.card h3{font-size:24px;color:var(--pri2);margin-bottom:6px}
+.card p{margin:6px 0}
+.card ul{margin:4px 0 0;padding-left:22px}
+.mut{color:var(--mut);font-size:17px}
+
+/* Beranda */
+#home{flex-direction:row;align-items:center;padding:0 80px;gap:40px;background:linear-gradient(135deg,#eaf1ff,#f8fbff)}
+#home .txt{flex:1}
+#home .kick{font-size:22px;font-weight:700;color:var(--pri);letter-spacing:.5px}
+#home h1{font-size:50px;line-height:1.15;color:var(--pri2);margin:10px 0 18px}
+#home .pem{font-size:26px;line-height:1.4;color:var(--ink);margin-bottom:30px;max-width:640px}
+#home .btns{display:flex;gap:16px}
+#home .btns button{min-height:64px;font-size:24px;padding:0 34px}
+#home .meta{margin-top:22px;font-size:18px;color:var(--mut)}
+#home .art{flex:0 0 380px;display:flex;justify-content:center}
+
+/* halaman umum */
+.page{padding:26px 48px;flex:1;display:flex;flex-direction:column;gap:14px;min-height:0}
+.pagehead h2{font-size:38px;color:var(--pri2)}
+.pagehead p{font-size:20px;color:var(--mut);margin-top:4px}
+.bar{display:flex;gap:14px;justify-content:space-between;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;flex:1;min-height:0}
+.lcard{background:#fff;color:var(--ink);border:3px solid var(--pri);border-radius:18px;text-align:left;padding:16px 20px;display:flex;flex-direction:column;gap:4px;min-height:0}
+.lcard:hover{background:#eff6ff}
+.lcard .ln{font-size:18px;color:var(--pri);font-weight:700}
+.lcard .lt{font-size:26px;line-height:1.2;color:var(--pri2)}
+.lcard .ls{font-size:18px;font-weight:400;color:var(--mut);flex:1}
+.lcard .lst{font-size:20px;color:#92400e}
+table{border-collapse:collapse;width:100%;font-size:18px;background:#fff}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left}
+th{background:#dbeafe;color:var(--pri2)}
+
+/* Level */
+#hdr{height:72px;background:var(--hdr);color:#fff;display:flex;align-items:center;gap:16px;padding:0 18px;flex:none}
+#hTitle{flex:1;line-height:1.2}
+#hTitle b{display:block;font-size:21px}
+#hTitle span{font-size:17px;color:#cbd5e1}
+#hDots{display:flex;gap:8px}
+#hDots i{width:16px;height:16px;border-radius:50%;background:#475569;display:block;border:2px solid #94a3b8}
+#hDots i.done{background:#22c55e;border-color:#bbf7d0}
+#hDots i.cur{border-color:#fde047;box-shadow:0 0 0 3px #fde047}
+#hLives .h{font-size:30px;color:#f87171;margin:0 1px}
+#hLives .h.lost{color:#475569}
+#hScore{font-size:20px;font-weight:700;min-width:130px;text-align:right}
+#lvbody{flex:1;min-height:0;position:relative}
+#lvbody.shake{animation:sh .35s}
+@keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#foot{height:92px;flex:none;display:flex;align-items:center;gap:14px;padding:0 22px;background:#e2e8f0;border-top:2px solid var(--line)}
+#fb{flex:1;font-size:19px;line-height:1.3;padding:8px 14px;border-radius:12px;min-height:60px;display:flex;align-items:center;background:#fff;color:var(--ink);border:2px solid var(--line)}
+#fb b{margin-right:6px}
+#fb.ok{background:var(--okbg);color:var(--ok);border-color:#16a34a}
+#fb.bad{background:var(--badbg);color:var(--bad);border-color:#dc2626}
+#modal{position:absolute;inset:0;background:rgba(15,23,42,.62);display:none;align-items:center;justify-content:center;z-index:10}
+.mbox{background:#fff;border-radius:20px;padding:26px 36px;width:780px;text-align:center;font-size:22px;line-height:1.4}
+.mbox h2{font-size:36px;color:var(--pri2);margin-bottom:6px}
+.mbox .stars{font-size:54px;color:#b45309;letter-spacing:6px}
+.mbox p{margin:8px 0}
+.mbtns{display:flex;gap:14px;justify-content:center;margin-top:18px}
+
+.two{display:flex;gap:24px;padding:16px 28px;height:100%}
+.col{flex:1;min-width:0}
+.side{flex:0 0 400px;display:flex;flex-direction:column;gap:14px}
+
+/* L1 */
+.row{display:flex;align-items:center;gap:14px;background:#fff;border:3px solid var(--line);border-radius:14px;padding:6px 12px;min-height:66px;margin-bottom:10px;font-size:21px;cursor:grab}
+.row.good{border-color:#16a34a;background:var(--okbg)}
+.row.badr{border-color:#dc2626;background:var(--badbg)}
+.row .num{width:38px;height:38px;border-radius:50%;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.row .txt{flex:1}
+.row .mk{font-weight:700;font-size:22px}
+.mv{min-height:48px;width:48px;padding:0;font-size:20px;background:#e0e7ff;color:var(--pri2)}
+.mv:disabled{opacity:.4;cursor:default}
+
+/* L2 */
+.l2{display:flex;flex-direction:column;gap:12px;padding:14px 28px;height:100%}
+.pool{display:flex;flex-wrap:wrap;gap:12px;min-height:128px;padding:12px;background:#fff;border:3px dashed var(--line);border-radius:14px;align-content:flex-start}
+.tok{background:#fff;border:3px solid var(--pri);color:var(--ink);font-family:Consolas,"Courier New",monospace;font-size:22px;padding:8px 16px;min-height:52px;border-radius:12px;cursor:grab;font-weight:700}
+.tok.sel{background:#fde68a;border-color:#92400e}
+.bins{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;flex:1;min-height:0}
+.bin{background:#fff;border:3px solid var(--pri);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;cursor:pointer;overflow:hidden}
+.bin.over{background:#eff6ff}
+.bin h4{margin:0;font-size:26px;color:var(--pri2)}
+.bin small{font-size:17px;color:var(--mut)}
+.chip{background:var(--okbg);color:var(--ok);font-family:Consolas,"Courier New",monospace;padding:5px 10px;border-radius:8px;font-size:18px;font-weight:700}
+
+/* L3 */
+.code{background:#0f172a;color:#e2e8f0;font:600 26px/1.7 Consolas,"Courier New",monospace;padding:20px 24px;border-radius:14px;white-space:pre;margin:0}
+.blank{display:inline-block;min-width:74px;text-align:center;background:#fde68a;color:#0f172a;border-radius:8px;padding:0 10px}
+.blank.ok{background:#86efac}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{background:#fff;color:var(--ink);border:3px solid var(--pri);font-family:Consolas,"Courier New",monospace;font-size:28px;min-height:70px}
+.opt:hover{background:#eff6ff}
+.opt:disabled{cursor:default;opacity:1}
+.opt.wrongopt{background:var(--badbg);color:var(--bad);border-color:#dc2626}
+.opt.rightopt{background:var(--okbg);color:var(--ok);border-color:#16a34a}
+.out{background:var(--okbg);color:var(--ok);border:2px solid #16a34a;border-radius:12px;padding:12px 16px;font-size:20px;line-height:1.4}
+
+/* L4 */
+.gridw{position:relative;width:566px;height:406px;background:#fff;border:3px solid var(--pri2);border-radius:8px;flex:none}
+.cell{position:absolute;width:80px;height:80px;border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center}
+.cell.wall{background:#475569;border-color:#334155}
+.cell.goal{background:#fef3c7;color:#92400e;font-size:48px}
+.cell.start{background:#e0f2fe}
+.rob{position:absolute;width:64px;height:64px;background:#1d4ed8;border-radius:16px;display:flex;align-items:center;justify-content:center;transition:left .25s,top .25s,transform .25s;border:3px solid #0f172a}
+.rob::after{content:"";border-left:24px solid #fff;border-top:15px solid transparent;border-bottom:15px solid transparent;margin-left:6px}
+.rob.crash{background:#dc2626}
+.tabs{display:flex;gap:10px}
+.tabs button{min-height:46px;font-size:18px}
+.pal{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pal button{min-height:50px;font-size:17px;padding:0 6px;background:#e0e7ff;color:var(--pri2);border:2px solid var(--pri)}
+.pal button:hover{background:#c7d2fe}
+.pal button:disabled{opacity:.5}
+.prog{background:#fff;border:3px dashed var(--line);border-radius:14px;min-height:118px;padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
+.prog button{min-height:42px;font-size:16px;padding:0 10px;background:var(--pri);color:#fff}
+.legend{font-size:17px;color:var(--mut)}
+
+/* L5 */
+.mhead{font-size:17px;color:var(--mut);margin-bottom:4px;font-weight:700}
+.mrow{display:flex;align-items:center;gap:10px;height:34px;margin-bottom:3px;padding:0 10px;border-radius:8px;border:2px solid;font-size:17px}
+.mrow.fl{background:#fee2e2;border-color:#dc2626}
+.mrow.in{background:#dcfce7;border-color:#16a34a}
+.mrow .sc{width:34px;font-weight:700;font-family:Consolas,monospace}
+.mrow .sj{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mrow .st{width:78px;font-weight:700;text-align:center}
+.mrow .mk{width:96px;font-weight:700}
+.mrow .mk.g{color:var(--ok)}
+.mrow .mk.b{color:var(--bad)}
+input[type=range]{width:100%;height:40px;accent-color:#1d4ed8}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metrics div{background:#fff;border:2px solid var(--line);border-radius:12px;padding:8px 12px;font-size:16px;color:var(--mut)}
+.metrics b{display:block;font-size:30px;color:var(--ink)}
+.opt5{display:block;width:100%;text-align:left;background:#fff;color:var(--ink);border:3px solid var(--pri);min-height:62px;font-size:19px;margin-top:10px;padding:8px 16px;line-height:1.3}
+.opt5:hover{background:#eff6ff}
+
+/* L6 */
+.l6{max-width:1020px;margin:0 auto;padding:16px 0;display:flex;flex-direction:column;gap:12px;height:100%}
+.l6top{display:flex;justify-content:space-between;font-size:22px;font-weight:700;color:var(--pri2)}
+.timer{height:18px;background:#cbd5e1;border-radius:9px;overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:var(--pri)}
+.qcard{background:#fff;border:2px solid var(--line);border-radius:16px;padding:20px 24px;font-size:25px;line-height:1.4;min-height:132px}
+.opt6{display:block;width:100%;text-align:left;background:#fff;color:var(--ink);border:3px solid var(--pri);min-height:66px;font-size:21px;margin-bottom:10px;padding:8px 18px;line-height:1.3}
+.opt6:hover:not(:disabled){background:#eff6ff}
+.opt6:disabled{cursor:default}
+.opt6.right{background:var(--okbg);color:var(--ok);border-color:#16a34a}
+.opt6.wrongo{background:var(--badbg);color:var(--bad);border-color:#dc2626}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- LAMAN MUKA -->
+<section id="home" class="screen active">
+  <div class="txt">
+    <div class="kick">GIM EDUKASI · 6 LEVEL</div>
+    <h1>Koding dan Kecerdasan Artifisial: Misi Robot Cerdas</h1>
+    <p class="pem">Bisakah robot mengambil keputusan sendiri? Mari ajari ia berpikir!</p>
+    <div class="btns">
+      <button class="btn" id="hmStart">Mulai Misi</button>
+      <button class="btn alt" id="hmGuide">Panduan</button>
+    </div>
+    <p class="meta">Algoritma · Tipe data · Percabangan · Perulangan · Lab Maya AI · Etika AI</p>
+  </div>
+  <div class="art" id="hmArt"></div>
+</section>
+
+<!-- PANDUAN -->
+<section id="guide" class="screen">
+  <div class="page">
+    <div class="pagehead"><h2>Panduan Bermain</h2><p>Baca dulu ya, supaya misimu lancar!</p></div>
+    <div class="grid2">
+      <div class="card"><h3>Tujuan Pembelajaran</h3>
+        <ul>
+          <li>Menyusun algoritma yang runtut</li>
+          <li>Mengenali tipe data pada variabel</li>
+          <li>Menerapkan percabangan (jika–selain itu)</li>
+          <li>Menerapkan perulangan untuk memprogram robot</li>
+          <li>Memahami ambang batas, akurasi, dan kesalahan AI</li>
+          <li>Memakai AI secara etis dan bertanggung jawab</li>
+        </ul>
+      </div>
+      <div class="card"><h3>Cara Bermain</h3>
+        <ul>
+          <li>Pilih level di Menu. Urutannya bebas, boleh diulang.</li>
+          <li>Seret kartu atau klik kartu lalu klik tujuannya.</li>
+          <li>Baca pesan umpan balik di bagian bawah layar.</li>
+          <li>Tombol <b>Berikutnya →</b> aktif setelah level selesai.</li>
+        </ul>
+      </div>
+      <div class="card"><h3>Aturan dan Skor</h3>
+        <ul>
+          <li>Tiap level punya nyawa (♥). Setiap kesalahan mengurangi nyawa dan skor.</li>
+          <li>Nyawa habis? Level diulang dari awal.</li>
+          <li>Skor maksimal 100 per level, total 600.</li>
+          <li>Bintang: ★★★ (90+), ★★ (60+), ★ (selesai).</li>
+          <li>Level 6 memakai batas waktu 20 detik per kasus.</li>
+        </ul>
+      </div>
+      <div class="card"><h3>Soft Skill yang Dilatih</h3>
+        <ul>
+          <li>Pemecahan masalah</li>
+          <li>Pengambilan keputusan</li>
+          <li>Manajemen waktu</li>
+          <li>Adaptasi terhadap skenario berbeda</li>
+        </ul>
+        <p class="mut">Gim ini juga dilengkapi efek suara. Kamu bisa mematikannya lewat tombol Suara di bagian atas.</p>
+      </div>
+    </div>
+    <div class="bar"><button class="btn alt" id="gdBack">← Kembali</button><button class="btn" id="gdStart">Ke Menu Level →</button></div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section id="menu" class="screen">
+  <div class="page">
+    <div class="pagehead"><h2>Menu Misi</h2><p>Pilih level mana saja. Selesaikan semuanya untuk mendapat bintang penuh!</p></div>
+    <div id="mgrid"></div>
+    <div class="bar">
+      <button class="btn alt" id="mnBack">← Beranda</button>
+      <div style="display:flex;gap:14px"><button class="btn alt" id="mnGuide">Panduan</button><button class="btn" id="mnRes">Lihat Hasil →</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- LEVEL -->
+<section id="level" class="screen">
+  <div id="hdr">
+    <button class="btn alt sm" id="hMenu">☰ Menu</button>
+    <div id="hTitle"></div>
+    <div id="hDots"></div>
+    <div id="hLives"></div>
+    <div id="hScore"></div>
+    <button class="btn alt sm" id="hGuide">Panduan</button>
+    <button class="btn alt sm" id="hSnd">Suara: Aktif</button>
+  </div>
+  <div id="lvbody"></div>
+  <div id="foot">
+    <button class="btn alt" id="fBack">← Menu</button>
+    <div id="fb" aria-live="polite"></div>
+    <button class="btn" id="fAct" style="display:none"></button>
+    <button class="btn" id="fNext" disabled>Berikutnya →</button>
+  </div>
+  <div id="modal"></div>
+</section>
+
+<!-- HASIL -->
+<section id="result" class="screen">
+  <div class="page">
+    <div class="pagehead"><h2>Hasil Misi Kamu</h2></div>
+    <div class="card" style="display:flex;align-items:center;gap:30px">
+      <div style="font-size:24px">Skor total<br><b style="font-size:48px;color:var(--pri2)" id="rTotal">0</b> <span class="mut">/ 600</span></div>
+      <div style="flex:1"><div style="font-size:30px;font-weight:700;color:#92400e" id="rRank"></div><div id="rMsg" style="font-size:19px;margin-top:4px"></div></div>
+    </div>
+    <div style="flex:1;min-height:0"><table id="rTable"></table></div>
+    <div class="bar">
+      <button class="btn alt" id="rsMenu">← Menu</button>
+      <div style="display:flex;gap:14px"><button class="btn alt" id="rsReset">Main dari Awal</button><button class="btn" id="rsCred">Informasi Kreator →</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- INFORMASI KREATOR (halaman paling belakang) -->
+<section id="credits" class="screen">
+  <div class="page">
+    <div class="pagehead"><h2>Informasi Kreator</h2></div>
+    <div class="card">
+      <h3>Pengembang</h3>
+      <p><b>Nama kreator:</b> [isi nama kreator di sini]</p>
+      <p><b>Organisasi/sekolah:</b> [isi nama organisasi atau sekolah di sini]</p>
+    </div>
+    <div class="card">
+      <h3>Keterangan Aset</h3>
+      <p>Seluruh gambar dan ilustrasi (robot, peta, ikon) dalam materi ini dibuat oleh AI dan digambar dengan kode HTML, CSS, dan SVG. Pengembangan dibantu Claude AI.</p>
+      <p>Efek suara dibangkitkan langsung oleh peramban. Materi ini tidak memakai aset atau tautan eksternal.</p>
+    </div>
+    <div class="bar"><button class="btn alt" id="crBack">← Kembali</button><button class="btn" id="crHome">Ke Beranda</button></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s);};
+var el=function(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;};
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+
+/* ---------- skala 16:9 ---------- */
+function fit(){var s=Math.min(innerWidth/1280,innerHeight/720);var st=$('#stage');st.style.transform='scale('+s+')';st.style.left=((innerWidth-1280*s)/2)+'px';st.style.top=((innerHeight-720*s)/2)+'px';}
+addEventListener('resize',fit);fit();
+
+/* ---------- state ---------- */
+var state={score:[0,0,0,0,0,0],done:[false,false,false,false,false,false],cur:0,lives:3,mistakes:0,over:false,sound:true,from:'home',pause:null,onResume:null};
+
+/* ---------- suara ---------- */
+var ac=null;
+function tone(f,st,d,type,vol){if(!ac)return;var o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.value=f;var t=ac.currentTime+st;g.gain.setValueAtTime(vol||.12,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+d+.02);}
+function sfx(k){if(!state.sound)return;try{if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();}catch(e){return;}
+  if(k==='ok'){tone(660,0,.12);tone(880,.12,.18);}
+  else if(k==='bad'){tone(220,0,.25,'sawtooth',.07);tone(160,.14,.25,'sawtooth',.07);}
+  else if(k==='win'){[523,659,784,1047].forEach(function(f,i){tone(f,i*.13,.22);});}
+  else if(k==='tick'){tone(500,0,.05,'square',.04);}}
+
+/* ---------- ilustrasi robot (SVG, dibuat dengan kode) ---------- */
+function robot(w){return '<svg viewBox="0 0 200 240" width="'+w+'" height="'+Math.round(w*1.2)+'" role="img" aria-label="Ilustrasi robot ramah">'+
+ '<line x1="100" y1="16" x2="100" y2="42" stroke="#1e3a8a" stroke-width="6"/><circle cx="100" cy="12" r="10" fill="#f59e0b"/>'+
+ '<rect x="40" y="42" width="120" height="90" rx="22" fill="#1d4ed8"/><rect x="58" y="60" width="84" height="52" rx="14" fill="#e0f2fe"/>'+
+ '<circle cx="80" cy="80" r="9" fill="#0f172a"/><circle cx="120" cy="80" r="9" fill="#0f172a"/>'+
+ '<path d="M82 98 Q100 110 118 98" stroke="#0f172a" stroke-width="5" fill="none" stroke-linecap="round"/>'+
+ '<rect x="76" y="132" width="48" height="14" fill="#1e3a8a"/><rect x="50" y="146" width="100" height="74" rx="16" fill="#3b82f6"/>'+
+ '<rect x="68" y="164" width="64" height="36" rx="8" fill="#e0f2fe"/>'+
+ '<text x="100" y="190" text-anchor="middle" font-family="Consolas,monospace" font-size="22" font-weight="700" fill="#1e3a8a">&lt;/&gt;</text>'+
+ '<rect x="20" y="148" width="26" height="56" rx="12" fill="#1e3a8a"/><rect x="154" y="148" width="26" height="56" rx="12" fill="#1e3a8a"/></svg>';}
+$('#hmArt').innerHTML=robot(330);
+
+/* ---------- navigasi umum ---------- */
+function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});$('#'+id).classList.add('active');}
+function cleanup(){if(state.pause)state.pause();state.pause=null;state.onResume=null;}
+function total(){return state.score.reduce(function(a,b){return a+b;},0);}
+function stars(sc){var n=sc>=90?3:(sc>=60?2:1);return '★★★'.slice(0,n)+'☆☆☆'.slice(0,3-n);}
+function fb(type,msg){var f=$('#fb');f.className=type;f.innerHTML='<b>'+(type==='ok'?'✔':type==='bad'?'✘':'ℹ')+'</b> <span>'+msg+'</span>';}
+function setAct(label,fn){var a=$('#fAct');a.style.display='';a.textContent=label;a.onclick=fn;}
+function hideAct(){$('#fAct').style.display='none';}
+
+function renderMenu(){
+  var g=$('#mgrid');g.innerHTML='';
+  LEVELS.forEach(function(c,i){
+    var b=el('button','lcard');
+    b.innerHTML='<div class="ln">Level '+(i+1)+'</div><div class="lt">'+c.title+'</div><div class="ls">'+c.sub+'</div><div class="lst">'+(state.done[i]?stars(state.score[i])+' · Skor '+state.score[i]:'Belum dimainkan')+'</div>';
+    b.onclick=function(){startLevel(i);};
+    g.appendChild(b);
+  });
+}
+function goMenu(){cleanup();renderMenu();show('menu');}
+function openGuide(from){if(from==='level'&&state.pause)state.pause();state.from=from;show('guide');}
+function closeGuide(){if(state.from==='level'){show('level');if(state.onResume)state.onResume();}else if(state.from==='menu'){renderMenu();show('menu');}else show(state.from);}
+
+$('#hmStart').onclick=goMenu;
+$('#hmGuide').onclick=function(){openGuide('home');};
+$('#gdBack').onclick=closeGuide;
+$('#gdStart').onclick=goMenu;
+$('#mnBack').onclick=function(){show('home');};
+$('#mnGuide').onclick=function(){openGuide('menu');};
+$('#mnRes').onclick=showResult;
+$('#hMenu').onclick=goMenu;
+$('#fBack').onclick=goMenu;
+$('#hGuide').onclick=function(){openGuide('level');};
+$('#hSnd').onclick=function(){state.sound=!state.sound;$('#hSnd').textContent='Suara: '+(state.sound?'Aktif':'Mati');if(state.sound)sfx('tick');};
+$('#fNext').onclick=goNext;
+$('#rsMenu').onclick=goMenu;
+$('#rsCred').onclick=function(){show('credits');};
+$('#rsReset').onclick=function(){state.score=[0,0,0,0,0,0];state.done=[false,false,false,false,false,false];goMenu();};
+$('#crBack').onclick=function(){show('result');};
+$('#crHome').onclick=function(){show('home');};
+
+function goNext(){if(state.cur<5)startLevel(state.cur+1);else showResult();}
+
+/* ---------- inti level ---------- */
+function renderHdr(){
+  var c=LEVELS[state.cur];
+  $('#hTitle').innerHTML='<b>Level '+(state.cur+1)+' dari 6</b><span>'+c.title+'</span>';
+  var d='';for(var i=0;i<6;i++)d+='<i class="'+(state.done[i]?'done ':'')+(i===state.cur?'cur':'')+'"></i>';
+  $('#hDots').innerHTML=d;
+  var h='';for(var j=0;j<c.lives;j++)h+='<span class="h'+(j<state.lives?'':' lost')+'">♥</span>';
+  $('#hLives').innerHTML=h;$('#hLives').setAttribute('aria-label','Nyawa tersisa '+state.lives);
+  $('#hScore').textContent='Skor: '+total();
+}
+function startLevel(i){
+  cleanup();state.cur=i;var c=LEVELS[i];state.lives=c.lives;state.mistakes=0;state.over=false;
+  $('#lvbody').innerHTML='';hideAct();$('#fNext').disabled=!state.done[i];
+  $('#fNext').textContent=i===5?'Lihat Hasil →':'Berikutnya →';
+  $('#modal').style.display='none';renderHdr();fb('info',c.intro);show('level');c.build($('#lvbody'));
+}
+function wrong(msg){
+  state.lives--;state.mistakes++;sfx('bad');fb('bad',msg);renderHdr();
+  var b=$('#lvbody');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');
+  if(state.lives<=0){state.over=true;setTimeout(showOver,1100);}
+}
+function modal(html){var m=$('#modal');m.innerHTML='<div class="mbox">'+html+'</div>';m.style.display='flex';}
+function complete(){
+  var c=LEVELS[state.cur];var sc=Math.max(0,100-c.pen*state.mistakes);
+  state.score[state.cur]=Math.max(state.score[state.cur],sc);state.done[state.cur]=true;
+  sfx('win');renderHdr();$('#fNext').disabled=false;
+  var last=state.cur===5;
+  modal('<h2>Level '+(state.cur+1)+' selesai!</h2><div class="stars">'+stars(sc)+'</div><p>Skor level ini: <b>'+sc+'</b> dari 100</p><p>'+c.recap+'</p>'+
+    '<div class="mbtns"><button class="btn alt" id="mRev">Tinjau Papan</button><button class="btn alt" id="mRetry">Ulangi Level</button><button class="btn" id="mNext">'+(last?'Lihat Hasil →':'Level Berikutnya →')+'</button></div>');
+  $('#mRev').onclick=function(){$('#modal').style.display='none';};
+  $('#mRetry').onclick=function(){startLevel(state.cur);};
+  $('#mNext').onclick=goNext;
+}
+function showOver(){
+  if(!state.over)return;
+  modal('<h2>Nyawa habis!</h2><p>Tenang, kesalahan adalah bagian dari belajar. Baca lagi umpan balik tadi, lalu coba lagi dengan strategi baru.</p><div class="mbtns"><button class="btn alt" id="oMenu">Ke Menu</button><button class="btn" id="oRetry">Coba Lagi</button></div>');
+  $('#oMenu').onclick=goMenu;$('#oRetry').onclick=function(){startLevel(state.cur);};
+}
+
+/* ================= LEVEL 1: ALGORITMA ================= */
+function buildL1(body){
+  var steps=['Mulai: robot bergerak menuju rak gudang','Pindai barcode pada rak','Baca jumlah stok dari sistem','Jika stok kurang dari 5, kirim notifikasi ke admin','Catat hasil pengecekan ke laporan','Selesai: robot kembali ke posisi awal'];
+  var order=[3,0,5,2,4,1],marks=null,drag=null;
+  body.innerHTML='<div class="two"><div class="col" id="l1list"></div><div class="side">'+
+    '<div class="card"><h3>Misi 1: Robot Gudang</h3><p>Robot perlu algoritma untuk mengecek stok barang. Susun langkah-langkahnya sampai urutannya benar.</p><p><b>Cara:</b> seret kartu ke posisi baru, atau tekan tombol ▲ ▼.</p></div>'+
+    '<div class="card"><h3>Konsep</h3><p>Algoritma adalah urutan langkah yang logis untuk menyelesaikan masalah. Jika urutannya salah, hasilnya ikut salah.</p></div>'+
+    '<div style="text-align:center">'+robot(120)+'</div></div></div>';
+  var list=$('#l1list',body);
+  function move(a,b){var x=order.splice(a,1)[0];order.splice(b,0,x);marks=null;draw();sfx('tick');fb('info','Langkah dipindahkan. Tekan "Periksa Urutan" kalau sudah yakin.');}
+  function draw(){
+    list.innerHTML='';
+    order.forEach(function(si,pos){
+      var r=el('div','row'+(marks?(marks[pos]?' good':' badr'):''));r.draggable=true;
+      r.innerHTML='<span class="num">'+(pos+1)+'</span><span class="txt">'+steps[si]+'</span>'+(marks?'<span class="mk">'+(marks[pos]?'✔':'✘')+'</span>':'');
+      var up=el('button','mv','▲');up.setAttribute('aria-label','Naikkan langkah');up.disabled=pos===0;up.onclick=function(){move(pos,pos-1);};
+      var dn=el('button','mv','▼');dn.setAttribute('aria-label','Turunkan langkah');dn.disabled=pos===order.length-1;dn.onclick=function(){move(pos,pos+1);};
+      r.appendChild(up);r.appendChild(dn);
+      r.ondragstart=function(e){drag=pos;try{e.dataTransfer.setData('text/plain',String(pos));}catch(x){}};
+      r.ondragover=function(e){e.preventDefault();};
+      r.ondrop=function(e){e.preventDefault();if(drag!==null&&drag!==pos)move(drag,pos);drag=null;};
+      list.appendChild(r);
+    });
+  }
+  draw();
+  setAct('Periksa Urutan',function(){
+    if(state.over)return;
+    marks=order.map(function(si,pos){return si===pos;});draw();
+    var n=marks.filter(Boolean).length;
+    if(n===6){sfx('ok');fb('ok','Urutan tepat! Robot dapat mengecek stok dengan benar dari awal sampai selesai.');complete();}
+    else wrong(n+' dari 6 langkah sudah tepat. Petunjuk: data harus diperoleh dulu sebelum diperiksa dan dicatat.');
+  });
+}
+
+/* ================= LEVEL 2: TIPE DATA ================= */
+function buildL2(body){
+  var items=[
+   {t:'umur = 25',k:'int',why:'25 adalah bilangan bulat tanpa koma, jadi Integer.'},
+   {t:'nama = "Budi"',k:'str',why:'Nilai di dalam tanda kutip adalah teks, jadi String.'},
+   {t:'pi = 3.14',k:'flt',why:'3.14 punya bagian desimal, jadi Float.'},
+   {t:'aktif = true',k:'bool',why:'true hanya bernilai benar atau salah, jadi Boolean.'},
+   {t:'suhu = -7',k:'int',why:'-7 tetap bilangan bulat (negatif), jadi Integer.'},
+   {t:'kode = "123"',k:'str',why:'Walau berisi angka, tanda kutip membuatnya teks, jadi String.'},
+   {t:'suhu_tubuh = 36.6',k:'flt',why:'36.6 punya bagian desimal, jadi Float.'},
+   {t:'lulus = false',k:'bool',why:'false adalah salah satu nilai Boolean.'}];
+  var bins=[{k:'int',n:'Integer',d:'Bilangan bulat'},{k:'flt',n:'Float',d:'Bilangan desimal'},{k:'str',n:'String',d:'Teks dalam tanda kutip'},{k:'bool',n:'Boolean',d:'Benar atau salah'}];
+  var sel=null,placed=0,drag=null;
+  body.innerHTML='<div class="l2"><div class="card" style="padding:10px 18px;font-size:20px"><b>Misi 2:</b> Setiap variabel menyimpan nilai dengan tipe tertentu. Cocokkan tiap kartu ke tipe datanya. Seret kartu, atau klik kartu lalu klik kotak tipe datanya.</div><div class="pool" id="pool"></div><div class="bins" id="bins"></div></div>';
+  var pool=$('#pool',body),bx=$('#bins',body),toks=[],binEls={};
+  items.forEach(function(it,i){
+    var b=el('button','tok');b.textContent=it.t;b.draggable=true;
+    b.onclick=function(){if(sel===i){sel=null;b.classList.remove('sel');return;}toks.forEach(function(t){if(t)t.classList.remove('sel');});sel=i;b.classList.add('sel');fb('info','Kartu dipilih. Sekarang klik tipe data yang cocok.');};
+    b.ondragstart=function(e){drag=i;try{e.dataTransfer.setData('text/plain',String(i));}catch(x){}};
+    toks[i]=b;pool.appendChild(b);
+  });
+  bins.forEach(function(bn){
+    var d=el('div','bin','<h4>'+bn.n+'</h4><small>'+bn.d+'</small>');d.tabIndex=0;
+    d.onclick=function(){if(sel!==null)place(sel,bn);else fb('info','Pilih kartu dulu, lalu klik kotak ini.');};
+    d.ondragover=function(e){e.preventDefault();d.classList.add('over');};
+    d.ondragleave=function(){d.classList.remove('over');};
+    d.ondrop=function(e){e.preventDefault();d.classList.remove('over');if(drag!==null)place(drag,bn);drag=null;};
+    binEls[bn.k]=d;bx.appendChild(d);
+  });
+  function place(i,bn){
+    if(state.over||!toks[i])return;var it=items[i];
+    if(it.k===bn.k){
+      binEls[bn.k].appendChild(el('div','chip',esc(it.t)));toks[i].remove();toks[i]=null;sel=null;placed++;sfx('ok');
+      fb('ok','Benar! '+it.why);
+      if(placed===items.length)setTimeout(complete,900);
+    }else{
+      toks[i].classList.remove('sel');sel=null;
+      wrong('Belum tepat. '+bn.n+' berarti '+bn.d.toLowerCase()+'. Periksa lagi nilai pada kartu <b>'+esc(it.t)+'</b>.');
+    }
+  }
+}
+
+/* ================= LEVEL 3: PERCABANGAN ================= */
+function buildL3(body){
+  var Q=[
+   {sc:'AC pintar harus menyala jika suhu ruangan <b>lebih dari</b> 30 °C.',pre:'suhu = 32\njika suhu ',post:' 30:\n    nyalakan_AC()\nselain itu:\n    matikan_AC()',opts:['>','<','==','<='],a:0,out:'Hasil: suhu 32 lebih dari 30, jadi <b>nyalakan_AC()</b> dijalankan.',why:'Kata "lebih dari" ditulis dengan operator &gt;.'},
+   {sc:'KKM sekolah adalah 75. Murid dengan nilai <b>tepat 75</b> dinyatakan lulus.',pre:'nilai = 75\njika nilai ',post:' 75:\n    tampilkan("Lulus")\nselain itu:\n    tampilkan("Remedial")',opts:['>','>=','<','!='],a:1,out:'Hasil: 75 sama dengan KKM, jadi tampil <b>"Lulus"</b>.',why:'Nilai 75 harus ikut lulus, jadi pakai &gt;= (lebih dari atau sama dengan).'},
+   {sc:'Pintu server hanya terbuka jika kartu akses valid <b>dan</b> PIN benar.',pre:'kartu_valid = benar\npin_benar = salah\njika kartu_valid ',post:' pin_benar:\n    buka_pintu()\nselain itu:\n    bunyikan_alarm()',opts:['DAN','ATAU','BUKAN','SAMA DENGAN'],a:0,out:'Hasil: PIN salah, jadi syarat DAN tidak terpenuhi. <b>bunyikan_alarm()</b> dijalankan dan pintu tetap terkunci.',why:'Operator DAN menuntut kedua syarat bernilai benar.'}];
+  var qi=0,solved=false;
+  body.innerHTML='<div class="two"><div class="col"><div class="mut" id="l3n" style="font-weight:700;margin-bottom:8px"></div><div class="card" id="l3sc" style="margin-bottom:14px"></div><pre class="code" id="l3code"></pre></div>'+
+    '<div class="side" style="flex:0 0 440px"><div class="card"><h3>Pilih operator yang tepat</h3><p>Klik jawaban untuk mengisi bagian yang kosong pada kode.</p></div><div class="opts" id="l3opts"></div><div id="l3out"></div></div></div>';
+  function show3(){
+    solved=false;var q=Q[qi];
+    $('#l3n',body).textContent='Soal '+(qi+1)+' dari '+Q.length;
+    $('#l3sc',body).innerHTML='<b>Skenario:</b> '+q.sc;
+    var code=$('#l3code',body);code.innerHTML=esc(q.pre)+'<span class="blank" id="blk">?</span>'+esc(q.post);
+    var o=$('#l3opts',body);o.innerHTML='';$('#l3out',body).innerHTML='';hideAct();
+    q.opts.forEach(function(t,j){
+      var b=el('button','opt');b.textContent=t;
+      b.onclick=function(){
+        if(solved||state.over)return;
+        var blk=$('#blk',body);blk.textContent=t;
+        if(j===q.a){
+          solved=true;blk.classList.add('ok');b.classList.add('rightopt');
+          [].forEach.call(o.children,function(x){x.disabled=true;});
+          $('#l3out',body).innerHTML='<div class="out">'+q.out+'</div>';sfx('ok');
+          fb('ok','Tepat! '+q.why);
+          if(qi===Q.length-1)setTimeout(complete,1400);
+          else setAct('Soal Berikutnya →',function(){qi++;show3();});
+        }else{
+          b.disabled=true;b.classList.add('wrongopt');
+          wrong('Belum tepat. Baca skenario lagi dan bayangkan kapan kondisi itu bernilai benar. Coba pilihan lain.');
+        }
+      };
+      o.appendChild(b);
+    });
+  }
+  show3();
+}
+
+/* ================= LEVEL 4: PERULANGAN ================= */
+function buildL4(body){
+  var W=7,H=5,CS=80,DX=[1,0,-1,0],DY=[0,1,0,-1];
+  var maps=[
+   {name:'Peta 1',start:[0,2],goal:[5,2],walls:[[2,0],[3,4]],limit:3},
+   {name:'Peta 2',start:[0,0],goal:[4,4],walls:[[2,2],[5,3]],limit:5},
+   {name:'Peta 3',start:[0,4],goal:[4,0],walls:[[1,2],[3,3],[0,0]],limit:7}];
+  var BL=[{k:'F',t:'Maju'},{k:'L',t:'Putar Kiri'},{k:'R',t:'Putar Kanan'},{k:'F2',t:'Ulangi 2× Maju'},{k:'F3',t:'Ulangi 3× Maju'},{k:'F4',t:'Ulangi 4× Maju'},{k:'F5',t:'Ulangi 5× Maju'},{k:'F6',t:'Ulangi 6× Maju'}];
+  var mi=0,prog=[],running=false,timers=[],solved=[false,false,false],ang=0,rx=0,ry=0,rd=0,rob=null;
+  body.innerHTML='<div class="two"><div style="flex:none"><div class="gridw" id="l4grid"></div><p class="legend" style="margin-top:8px">★ = tujuan · kotak gelap = dinding · biru muda = posisi awal. Robot mulai menghadap ke kanan.</p></div>'+
+    '<div class="col" style="display:flex;flex-direction:column;gap:10px"><div class="tabs" id="l4tabs"></div>'+
+    '<div class="mut" id="l4info" style="font-weight:700"></div><div class="pal" id="l4pal"></div>'+
+    '<div class="mut" style="font-weight:700">Programmu (klik blok untuk menghapus):</div><div class="prog" id="l4prog"></div>'+
+    '<div style="display:flex;gap:10px"><button class="btn" id="l4run">▶ Jalankan</button><button class="btn alt" id="l4clr">Hapus Semua</button></div></div></div>';
+  var grid=$('#l4grid',body);
+  function setBusy(b){$('#l4run',body).disabled=b;$('#l4clr',body).disabled=b;[].forEach.call($('#l4pal',body).children,function(x){x.disabled=b;});}
+  function resetRobot(){var m=maps[mi];rx=m.start[0];ry=m.start[1];rd=0;ang=0;if(rob){rob.classList.remove('crash');place(true);}}
+  function place(instant){if(!rob)return;if(instant){rob.style.transition='none';}rob.style.left=(rx*CS+8)+'px';rob.style.top=(ry*CS+8)+'px';rob.style.transform='rotate('+ang+'deg)';if(instant){void rob.offsetWidth;rob.style.transition='';}}
+  function drawMap(){
+    var m=maps[mi];grid.innerHTML='';
+    for(var y=0;y<H;y++)for(var x=0;x<W;x++){
+      var c=el('div','cell');c.style.left=(x*CS)+'px';c.style.top=(y*CS)+'px';
+      if(m.walls.some(function(w){return w[0]===x&&w[1]===y;}))c.classList.add('wall');
+      if(m.goal[0]===x&&m.goal[1]===y){c.classList.add('goal');c.textContent='★';}
+      if(m.start[0]===x&&m.start[1]===y)c.classList.add('start');
+      grid.appendChild(c);
+    }
+    rob=el('div','rob');rob.setAttribute('aria-label','Robot');grid.appendChild(rob);resetRobot();
+  }
+  function drawTabs(){
+    var t=$('#l4tabs',body);t.innerHTML='';
+    maps.forEach(function(m,i){
+      var b=el('button','btn'+(i===mi?'':' alt'),m.name+(solved[i]?' ✔':''));
+      b.disabled=!(i===0||solved[i-1]||solved[i])||running;
+      b.onclick=function(){if(running)return;mi=i;prog=[];drawAll();fb('info',m.name+': bawa robot ke ★. Program maksimal '+m.limit+' blok, jadi manfaatkan blok Ulangi!');};
+      t.appendChild(b);
+    });
+  }
+  function drawProg(){
+    var p=$('#l4prog',body);p.innerHTML='';
+    prog.forEach(function(k,i){
+      var name=BL.filter(function(b){return b.k===k;})[0].t;
+      var b=el('button','',(i+1)+'. '+name);b.onclick=function(){if(running)return;prog.splice(i,1);drawProg();};p.appendChild(b);
+    });
+    $('#l4info',body).textContent=maps[mi].name+' · Blok dipakai: '+prog.length+' / '+maps[mi].limit;
+  }
+  function drawPal(){
+    var p=$('#l4pal',body);p.innerHTML='';
+    BL.forEach(function(b){var x=el('button','',b.t);x.onclick=function(){
+      if(running||state.over)return;
+      if(prog.length>=maps[mi].limit){fb('info','Batas blok tercapai. Hapus satu blok atau gunakan blok Ulangi agar lebih ringkas.');return;}
+      prog.push(b.k);sfx('tick');drawProg();};p.appendChild(x);});
+  }
+  function drawAll(){drawMap();drawTabs();drawPal();drawProg();}
+  function expand(){var a=[];prog.forEach(function(k){if(k==='L'||k==='R'||k==='F')a.push(k);else{var n=parseInt(k.slice(1),10);for(var i=0;i<n;i++)a.push('F');}});return a;}
+  function run(){
+    if(running||state.over)return;
+    if(!prog.length){fb('info','Susun programmu dulu dengan menekan blok perintah.');return;}
+    resetRobot();running=true;setBusy(true);drawTabs();
+    var acts=expand(),m=maps[mi];
+    function step(i){
+      if(i>=acts.length){finish();return;}
+      var a=acts[i];
+      if(a==='L'){rd=(rd+3)%4;ang-=90;}
+      else if(a==='R'){rd=(rd+1)%4;ang+=90;}
+      else{
+        var nx=rx+DX[rd],ny=ry+DY[rd];
+        if(nx<0||ny<0||nx>=W||ny>=H||m.walls.some(function(w){return w[0]===nx&&w[1]===ny;})){
+          rob.classList.add('crash');running=false;setBusy(false);drawTabs();
+          wrong('Robot menabrak dinding atau batas peta pada langkah ke-'+(i+1)+'. Periksa arah putar dan jumlah langkahmu.');return;
+        }
+        rx=nx;ry=ny;
+      }
+      place();timers.push(setTimeout(function(){step(i+1);},320));
+    }
+    function finish(){
+      running=false;setBusy(false);
+      if(rx===m.goal[0]&&ry===m.goal[1]){
+        var first=!solved[mi];solved[mi]=true;sfx('ok');drawTabs();
+        fb('ok','Berhasil! Robot sampai di ★ hanya dengan '+prog.length+' blok. Perulangan membuat program lebih ringkas.');
+        if(first&&solved.every(Boolean))setTimeout(complete,1100);
+      }else{
+        drawTabs();
+        wrong('Robot berhenti di kolom '+(rx+1)+', baris '+(ry+1)+' dan belum sampai ★. Hitung lagi jumlah langkah maju dan arah putarnya.');
+      }
+    }
+    step(0);
+  }
+  $('#l4run',body).onclick=run;
+  $('#l4clr',body).onclick=function(){prog=[];drawProg();fb('info','Program dihapus. Susun lagi dari awal.');};
+  state.pause=function(){timers.forEach(clearTimeout);timers=[];if(running){running=false;setBusy(false);resetRobot();drawTabs();}};
+  drawAll();fb('info','Peta 1: bawa robot ke ★. Program maksimal 3 blok, jadi manfaatkan blok Ulangi!');
+}
+
+/* ================= LEVEL 5: LAB MAYA FILTER SPAM AI ================= */
+function buildL5(body){
+  var MAILS=[
+   {s:'Selamat! Anda menang undian Rp500 juta',v:96,spam:true},
+   {s:'Klik tautan ini untuk verifikasi rekening',v:89,spam:true},
+   {s:'Pinjaman cepat tanpa syarat, cair 5 menit',v:82,spam:true},
+   {s:'Diskon obat murah 90%, beli sekarang',v:74,spam:true},
+   {s:'Anda terpilih jadi reseller, transfer dulu',v:66,spam:true},
+   {s:'Pembayaran invoice mendesak: segera cek',v:58,spam:false},
+   {s:'Info promo: cek lampiran penting',v:47,spam:true},
+   {s:'Konfirmasi pengiriman paket Anda',v:41,spam:false},
+   {s:'Undangan rapat orang tua murid',v:33,spam:false},
+   {s:'Hasil laboratorium Anda sudah tersedia',v:23,spam:false},
+   {s:'Tagihan listrik bulan ini',v:15,spam:false},
+   {s:'Jadwal praktikum minggu depan',v:8,spam:false}];
+  var SC=[
+   {n:'Klinik Sehat',d:'Email hasil laboratorium pasien <b>tidak boleh</b> masuk ke folder spam. Akurasi minimal 90%.',
+    ok:function(m){return m.fp===0&&m.acc>=.9;},
+    hint:function(m){return m.fp>0?'Masih ada '+m.fp+' email penting yang terblokir. Naikkan ambang batas agar filter lebih longgar.':'Terlalu banyak spam lolos sehingga akurasi di bawah 90%. Turunkan ambang batas sedikit, tetapi jangan sampai email penting terblokir.';}},
+   {n:'Keamanan Perusahaan',d:'Tidak boleh ada email penipuan (spam) yang <b>lolos</b> ke kotak masuk karyawan. Akurasi minimal 90%.',
+    ok:function(m){return m.fn===0&&m.acc>=.9;},
+    hint:function(m){return m.fn>0?'Masih ada '+m.fn+' spam yang lolos. Turunkan ambang batas agar filter lebih ketat.':'Filter terlalu ketat sehingga banyak email penting terblokir dan akurasi turun di bawah 90%. Naikkan sedikit ambang batas.';}}];
+  var ph=0,t=50;
+  body.innerHTML='<div class="two"><div style="flex:0 0 700px"><div class="mhead">Kotak masuk (urut dari skor spam AI tertinggi)</div><div id="mlist"></div></div><div class="side" id="l5side" style="flex:1"></div></div>';
+  var list=$('#mlist',body),side=$('#l5side',body);
+  function metrics(){var tp=0,fp=0,fn=0,tn=0;MAILS.forEach(function(m){var fl=m.v>=t;if(fl&&m.spam)tp++;else if(fl&&!m.spam)fp++;else if(!fl&&m.spam)fn++;else tn++;});return {tp:tp,fp:fp,fn:fn,tn:tn,acc:(tp+tn)/MAILS.length};}
+  function drawList(){
+    list.innerHTML='';
+    MAILS.forEach(function(m){
+      var fl=m.v>=t,good=(fl===m.spam);
+      list.appendChild(el('div','mrow '+(fl?'fl':'in'),'<span class="sc">'+m.v+'</span><span class="sj">'+esc(m.s)+'</span><span class="st">'+(fl?'SPAM':'MASUK')+'</span><span class="mk '+(good?'g':'b')+'">'+(good?'✔ benar':'✘ salah')+'</span>'));
+    });
+  }
+  function drawMetrics(){
+    var m=metrics();
+    $('#tv',side).textContent=t;
+    $('#mt',side).innerHTML='<div>Akurasi<b>'+Math.round(m.acc*100)+'%</b></div><div>Keputusan benar<b>'+(m.tp+m.tn)+' / 12</b></div><div>Email penting terblokir<b>'+m.fp+'</b></div><div>Spam lolos<b>'+m.fn+'</b></div>';
+    drawList();
+  }
+  function render(){
+    if(ph<2){
+      var s=SC[ph];
+      side.innerHTML='<div class="card"><h3>Skenario '+(ph+1)+' dari 2: '+s.n+'</h3><p>'+s.d+'</p></div>'+
+       '<div class="card"><label for="sl">Ambang batas spam: <b id="tv">'+t+'</b></label><input type="range" id="sl" min="0" max="100" value="'+t+'"><p class="mut">Email dengan skor ≥ ambang batas dikirim ke folder SPAM.</p></div><div class="metrics" id="mt"></div>';
+      var sl=$('#sl',side);sl.oninput=function(){t=parseInt(sl.value,10);drawMetrics();};
+      drawMetrics();
+      setAct('Kunci Ambang Batas',function(){
+        if(state.over)return;var m=metrics();
+        if(s.ok(m)){
+          sl.disabled=true;sfx('ok');fb('ok','Tepat! Ambang batas '+t+' memenuhi syarat '+s.n+' (akurasi '+Math.round(m.acc*100)+'%).');
+          if(ph===0)setAct('Lanjut ke Skenario 2 →',function(){ph=1;t=50;render();fb('info','Skenario baru, tujuan baru. Sesuaikan lagi ambang batasnya!');});
+          else setAct('Lanjut ke Pertanyaan Refleksi →',function(){ph=2;render();});
+        }else wrong(s.hint(m));
+      });
+    }else{
+      hideAct();drawList();
+      side.innerHTML='<div class="card"><h3>Pertanyaan Refleksi</h3><p>Kamu sudah mencoba dua skenario. Mengapa akurasi 100% tidak bisa dicapai di keduanya?</p>'+
+       '<div id="rq"></div></div>';
+      var O=['Karena slider-nya rusak.','Karena skor beberapa email spam dan email penting saling tumpang tindih, sehingga satu ambang batas tidak bisa memisahkan semuanya.','Karena semakin kecil ambang batas, hasilnya selalu semakin akurat.','Karena AI tidak membutuhkan data.'];
+      var rq=$('#rq',side),done=false;
+      O.forEach(function(txt,j){
+        var b=el('button','opt5');b.textContent=txt;
+        b.onclick=function(){
+          if(done||state.over)return;
+          if(j===1){done=true;b.style.background='#dcfce7';b.style.borderColor='#16a34a';[].forEach.call(rq.children,function(x){x.disabled=true;});sfx('ok');fb('ok','Tepat! Setiap model AI punya batas kemampuan. Kamu harus memilih keseimbangan: lebih ketat atau lebih longgar, sesuai kebutuhan kasus.');setTimeout(complete,1500);}
+          else{b.disabled=true;b.style.background='#fee2e2';b.style.borderColor='#dc2626';wrong('Belum tepat. Perhatikan lagi skor email di daftar: apakah semua spam punya skor di atas semua email penting?');}
+        };rq.appendChild(b);
+      });
+    }
+  }
+  render();
+}
+
+/* ================= LEVEL 6: ETIKA AI (BERTIMER) ================= */
+function buildL6(body){
+  var C=[
+   {q:'Kamu memakai chatbot AI untuk mencari data statistik laporan tugas. Jawabannya meyakinkan, lengkap dengan angka. Apa yang sebaiknya kamu lakukan?',o:['Langsung menyalin ke laporan karena AI pasti benar.','Memeriksa angkanya ke sumber resmi sebelum dipakai.','Menambah angka karangan sendiri supaya laporan terlihat lengkap.'],a:1,w:'AI bisa keliru atau mengarang jawaban. Data penting wajib diverifikasi ke sumber tepercaya.'},
+   {q:'Kamu ingin melatih AI pengenal wajah untuk proyek kelas dengan foto teman-temanmu. Langkah yang tepat?',o:['Mengambil foto dari media sosial mereka tanpa memberi tahu.','Memakai foto yang kebetulan ada di galeri ponselmu.','Meminta izin dan menjelaskan tujuan pemakaian datanya.'],a:2,w:'Wajah adalah data pribadi. Gunakan hanya dengan izin dan tujuan yang jelas, sesuai prinsip perlindungan data pribadi.'},
+   {q:'Model AI seleksi magang sering menolak pelamar perempuan karena data latihnya didominasi pelamar laki-laki. Apa solusinya?',o:['Meninjau dan menyeimbangkan data latih, lalu menguji ulang model.','Membiarkannya, karena komputer pasti objektif.','Menghapus semua pelamar perempuan dari data uji.'],a:0,w:'Data yang timpang menghasilkan model yang bias. Data latih perlu ditinjau dan diseimbangkan.'},
+   {q:'AI menuliskan kode untuk tugas pemrogramanmu dan programnya berjalan, tetapi kamu belum paham cara kerjanya. Sikap terbaik?',o:['Mengumpulkan langsung tanpa mengubah apa pun.','Mempelajari tiap baris, mengujinya, dan menyebut bahwa AI membantu.','Mengaku kode itu sepenuhnya buatanmu sendiri.'],a:1,w:'AI adalah alat bantu. Kamu tetap perlu memahami dan menguji kodenya, serta jujur menyebut bantuan AI.'},
+   {q:'Saat magang di toko online, kamu ingin chatbot publik merangkum daftar pelanggan lengkap dengan nomor teleponnya. Apa yang tepat?',o:['Menempelkan seluruh daftar agar ringkasannya akurat.','Mengirim sebagian saja supaya tidak ketahuan.','Menghapus atau menyamarkan data pribadi sebelum memakai AI.'],a:2,w:'Data pelanggan bersifat rahasia. Samarkan atau hapus data pribadi sebelum diproses layanan AI publik.'}];
+  var T=20,qi=0,answered=false,left=T,tm=null;
+  body.innerHTML='<div class="l6"><div class="l6top"><span id="qn"></span><span id="tl"></span></div><div class="timer"><i id="tbar"></i></div><div class="qcard" id="qc"></div><div id="qo"></div></div>';
+  function stop(){if(tm){clearInterval(tm);tm=null;}}
+  function upd(){var b=$('#tbar',body);b.style.width=(left/T*100)+'%';b.style.background=left<=5?'#b91c1c':'#1d4ed8';$('#tl',body).textContent='Sisa waktu: '+Math.ceil(left)+' detik';}
+  function startTimer(){stop();left=T;upd();tm=setInterval(function(){left=Math.max(0,left-.1);upd();if(left<=0){stop();answer(-1);}},100);}
+  function answer(j){
+    if(answered||state.over)return;answered=true;stop();
+    var c=C[qi],kids=[].slice.call($('#qo',body).children);
+    kids.forEach(function(b,k){b.disabled=true;if(k===c.a)b.classList.add('right');else if(k===j)b.classList.add('wrongo');});
+    if(j===c.a){sfx('ok');fb('ok','Tepat! '+c.w);}
+    else wrong((j<0?'Waktu habis! ':'Kurang tepat. ')+c.w);
+    if(!state.over){
+      var last=qi===C.length-1;
+      setAct(last?'Selesaikan Level':'Kasus Berikutnya →',function(){if(last)complete();else{qi++;showQ();}});
+    }
+  }
+  function showQ(){
+    answered=false;var c=C[qi];
+    $('#qn',body).textContent='Kasus '+(qi+1)+' dari '+C.length;
+    $('#qc',body).textContent=c.q;
+    var o=$('#qo',body);o.innerHTML='';
+    c.o.forEach(function(txt,j){var b=el('button','opt6');b.textContent=String.fromCharCode(65+j)+'. '+txt;b.onclick=function(){answer(j);};o.appendChild(b);});
+    hideAct();fb('info','Pilih tindakan terbaik sebelum waktu habis.');startTimer();
+  }
+  state.pause=stop;
+  state.onResume=function(){if(!answered&&!state.over)startTimer();};
+  showQ();
+}
+
+/* ---------- daftar level ---------- */
+var LEVELS=[
+ {title:'Algoritma',sub:'Urutkan langkah kerja robot gudang',lives:3,pen:25,focus:'urutan langkah algoritma',intro:'Level 1: susun langkah robot gudang dengan urutan yang benar.',recap:'Kamu sudah mampu menyusun algoritma secara runtut.',build:buildL1},
+ {title:'Variabel dan Tipe Data',sub:'Cocokkan nilai dengan tipe datanya',lives:3,pen:25,focus:'tipe data Integer, Float, String, Boolean',intro:'Level 2: cocokkan tiap kartu variabel dengan tipe datanya.',recap:'Kamu sudah mampu membedakan tipe data dasar.',build:buildL2},
+ {title:'Percabangan',sub:'Lengkapi kondisi jika–selain itu',lives:3,pen:25,focus:'operator perbandingan dan operator logika',intro:'Level 3: lengkapi kondisi pada kode agar robot mengambil keputusan yang benar.',recap:'Kamu sudah mampu menerapkan percabangan dan operator logika.',build:buildL3},
+ {title:'Perulangan',sub:'Program robot pada peta kotak',lives:5,pen:15,focus:'blok Ulangi agar program ringkas',intro:'Level 4: susun program agar robot sampai ke ★.',recap:'Kamu sudah mampu memakai perulangan untuk menyederhanakan program.',build:buildL4},
+ {title:'Lab Maya: Filter Spam AI',sub:'Atur ambang batas dan baca hasilnya',lives:3,pen:25,focus:'ambang batas, akurasi, dan kesalahan AI',intro:'Level 5: geser ambang batas dan amati hasil filter secara langsung.',recap:'Kamu sudah memahami pengaruh ambang batas pada akurasi dan kesalahan AI.',build:buildL5},
+ {title:'Etika AI',sub:'Ambil keputusan cepat dalam 20 detik',lives:3,pen:25,focus:'etika, privasi, dan bias pada AI',intro:'Level 6: jawab tiap kasus sebelum waktu habis.',recap:'Kamu sudah mampu mengambil keputusan etis dalam memakai AI.',build:buildL6}];
+
+/* ---------- hasil ---------- */
+function showResult(){
+  cleanup();var tot=total();
+  var rank=tot>=540?'Master Koding dan AI':tot>=400?'Insinyur Robot Handal':tot>=250?'Teknisi Robot Pemula':'Calon Insinyur: Ayo Berlatih Lagi';
+  var n=state.done.filter(Boolean).length;
+  $('#rTotal').textContent=tot;$('#rRank').textContent=rank;
+  $('#rMsg').textContent=n===6?'Semua level sudah kamu selesaikan. Soft skill yang terlatih: pemecahan masalah, pengambilan keputusan, manajemen waktu, dan adaptasi.':'Kamu baru menyelesaikan '+n+' dari 6 level. Lanjutkan misinya untuk mendapat gelar tertinggi!';
+  var h='<tr><th>Level</th><th>Materi</th><th>Bintang</th><th>Skor</th><th>Saran</th></tr>';
+  LEVELS.forEach(function(c,i){
+    var s=state.done[i]?stars(state.score[i]):'—',sc=state.done[i]?state.score[i]:'—';
+    var sar=!state.done[i]?'Belum dimainkan. Coba mainkan dari Menu.':state.score[i]<100?'Ulangi untuk memperkuat: '+c.focus+'.':'Sudah tepat. Pertahankan!';
+    h+='<tr><td>'+(i+1)+'</td><td>'+c.title+'</td><td style="color:#92400e;font-size:22px">'+s+'</td><td>'+sc+'</td><td>'+sar+'</td></tr>';
+  });
+  $('#rTable').innerHTML=h;show('result');
+}
+
+})();
+</script>
+</body>
+</html>
